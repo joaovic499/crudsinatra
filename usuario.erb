@@ -1,0 +1,57 @@
+require 'sinatra'
+require 'rackup'
+require 'sequel'
+require 'sqlite3'
+
+DB = Sequel.connect('sqlite://usuario.db')
+DB.create_table? :usuarios do
+    primary_key :id
+    String :nomeUsuario, unique:true, null:false
+    String :senha, null:false
+    String :codigo, unique:true, null:false
+end
+
+class Usuario <Sequel::Model; end
+
+
+get '/' do erb :create
+  erb :create
+end
+
+post '/' do 
+  nome_usuario = params[:name]
+  erb :usuariooo, locals: { nome: nome_usuario }
+end
+
+__END__
+
+@@ layout
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Usuario MIL</title>
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>
+
+@@ create
+<h1>Criar Usuario MIL!</h1> <br>
+<form action="/" method="post">
+  <label for="coloque_seu_nome">Usuario:</label>
+  <input type="text" name="name">
+  <label for="coloque_sua_senha">Senha:</label>
+  <input type="password" name="senha">
+  <label for="coloque_seu_codigo">Codigo:</label>
+  <input type="text" name="codigo">
+  <p><input type="submit" value="Continue →"></p>
+</form>
+
+@@ error
+<p><%= @error %></p>
+
+@@ usuariooo
+Bem vindo usuario: <%= name %>:
+
+    
