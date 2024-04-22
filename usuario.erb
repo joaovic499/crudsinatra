@@ -6,23 +6,48 @@ require 'sqlite3'
 DB = Sequel.connect('sqlite://usuario.db')
 DB.create_table? :usuarios do
     primary_key :id
-    String :nomeUsuario, unique:true, null:false
+    String :nome_usuario, unique:true, null:false
     String :senha, null:false
     String :codigo, unique:true, null:false
 end
 
 class Usuario <Sequel::Model; end
-
-
-get '/' do erb :create
-  erb :create
-end
-
 post '/' do 
   nome_usuario = params[:name]
   erb :usuariooo, locals: { nome: nome_usuario }
 end
 
+get '/index' do erb :create
+  erb :create
+end
+
+post '/' do erb :create #Criar
+  nome_usuario = params[:nome]
+  senha = params[:senha]
+  codigo = params[:codigo]
+  Usuario.create(nome_usuario: nome_usuario, senha: senha, codigo: codigo)
+  erb :usuariooo, locals: { nome_usuario: nome_usuario }
+end
+
+get '/usuarios' do  #Mostrar
+  @usuarios = Usuario.all
+  erb :usuarios
+  end
+
+
+  put '/usuarios/edit/:id' do #Editar
+  @usuario = Usuario[params[:id]]
+  @usuario.update(nome_usuario: params[:nome], senha: params[:senha], codigo: params[:codigo])
+  @usuario.save
+  redirect '/usuarios'
+end
+
+
+delete '/usuarios/delete/:id' do #Excluir
+  @usuario = Usuario.find[params[:id]]
+  @usuario.destroy
+  redirect '/'
+end
 __END__
 
 @@ layout
@@ -40,7 +65,7 @@ __END__
 <h1>Criar Usuario MIL!</h1> <br>
 <form action="/" method="post">
   <label for="coloque_seu_nome">Usuario:</label>
-  <input type="text" name="name">
+  <input type="text" name="nome">
   <label for="coloque_sua_senha">Senha:</label>
   <input type="password" name="senha">
   <label for="coloque_seu_codigo">Codigo:</label>
@@ -52,6 +77,52 @@ __END__
 <p><%= @error %></p>
 
 @@ usuariooo
-Bem vindo usuario: <%= name %>:
+Bem vindo usuario: <%= nome_usuario %>:
 
-    
+@@ usuarios
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Lista de Usuários</title>
+  </head>
+  <body>
+    <h1>Lista de Usuários</h1>
+    <ul>
+      <% @usuarios.each do |usuario| %>
+        <li>
+          Nome: <%= usuario.nome_usuario %><br>
+          Código: <%= usuario.codigo %>
+         <form action="/usuarios/<%= usuario.id %>/edit" method="get" style="display: inline;">
+            <input type="submit" value="Editar"> <input type="submit" value="Excluir">
+          </form>
+        </li>
+      <% end %>
+    </ul>
+  </body>
+</html>
+
+@@ edit
+<h1>Editar Usuario</h1>
+<form action="/usuarios/<%= @usuario.id %>" method="post">
+  <label for="edit_nome">Nome:</label>
+  <input type="text" name="nome" value="<%= @usuario.nome_usuario %>">
+  <label for="edit_senha">Senha:</label>
+  <input type="password" name="senha" value="<%= @usuario.senha %>">
+  <label for="edit_codigo">Codigo:</label>
+  <input type="text" name="codigo" value="<%= @usuario.codigo %>">
+  <p><input type="submit" value="Salvar"></p>
+</form>
+
+@@ delete
+        <h1> Excluir Usuario </h1>
+    <ul>
+      <% @usuarios.each do |usuario| %>
+        <li>
+          Nome: <%= usuario.nome_usuario %><br>
+          Código: <%= usuario.codigo %>
+         <form action="/usuarios/<%= usuario.id %>/edit" method="delete" style="display: inline;">
+            <input type="submit" value="Excluir">
+          </form>
+        </li>
+      <% end %>
+    </ul>
